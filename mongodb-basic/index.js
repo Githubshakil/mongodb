@@ -1,7 +1,12 @@
 const express = require("express");
+const cors = require('cors')
 const app = express();
 const { MongoClient, ServerApiVersion } = require("mongodb");
 const port = process.env.PORT || 3000;
+
+//middleware
+app.use(express.json())
+app.use(cors())
 
 //connecting to mongodb
 
@@ -26,6 +31,13 @@ async function run() {
     const db = client.db('mydatabase')
     const usersCollection = db.collection("users")
     
+
+    //add new users collection
+    app.post("/add-user", async (req,res)=>{
+      const newUser = req.body
+      const result = await usersCollection.insertOne(newUser)
+      console.log(result)
+    })
 
 
 
