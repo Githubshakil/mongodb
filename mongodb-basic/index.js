@@ -1,12 +1,12 @@
 const express = require("express");
-const cors = require('cors')
+const cors = require("cors");
 const app = express();
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const port = process.env.PORT || 3000;
 
 //middleware
-app.use(express.json())
-app.use(cors())
+app.use(express.json());
+app.use(cors());
 
 //connecting to mongodb
 
@@ -28,31 +28,58 @@ async function run() {
     await client.connect();
 
     //create DB collection
-    const db = client.db('mydatabase')
-    const usersCollection = db.collection("users")
-    
+    const db = client.db("mydatabase");
+    const usersCollection = db.collection("users");
 
     //add new users collection
-    app.post("/add-user", async (req,res)=>{
-     try {
-       const newUser = req.body
-      const result = await usersCollection.insertOne(newUser)
-      res.status(200).json({
-        message: "User created successfully",
-        result
-      })
-      
-     } catch (error) {
-      res.status(400).json({
-        message:"Failed to create user"
-      })
-     }
+    app.post("/add-user", async (req, res) => {
+      try {
+        const newUser = req.body;
+        const result = await usersCollection.insertOne(newUser);
+        res.status(200).json({
+          message: "User created successfully",
+          result,
+        });
+      } catch (error) {
+        res.status(400).json({
+          message: "Failed to create user",
+        });
+      }
+    });
+
+    // find all user
+    app.get("/users", async (req, res) => {
+      try {
+        const users = await usersCollection.find().toArray();
+
+        res.status(200).json(users);
+      } catch (error) {
+        res.status(403).json({
+          message: "Failed to fetch user",
+          error,
+        });
+      }
+    });
+
+    // find single user
+    app.get("/users/:id", async(req,res)=>{
+      try {
+        const {id} = req.params
+        const user = await usersCollection.findOne({_id: new ObjectId(id)})
+        if (!user) {
+          return res.status(404).json({
+            message: "user not found"
+          })
+        }
+        
+        res.status(200).json(user)
+      } catch (error) {
+         res.status(403).json({
+          message: "Failed to fetch user",
+          error,
+        });
+      }
     })
-
-
-
-
-
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
