@@ -34,9 +34,19 @@ async function run() {
 
     //add new users collection
     app.post("/add-user", async (req,res)=>{
-      const newUser = req.body
+     try {
+       const newUser = req.body
       const result = await usersCollection.insertOne(newUser)
-      console.log(result)
+      res.status(200).json({
+        message: "User created successfully",
+        result
+      })
+      
+     } catch (error) {
+      res.status(400).json({
+        message:"Failed to create user"
+      })
+     }
     })
 
 
