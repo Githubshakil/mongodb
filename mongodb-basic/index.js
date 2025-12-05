@@ -62,38 +62,82 @@ async function run() {
     });
 
     // find single user
-    app.get("/users/:id", async(req,res)=>{
+    app.get("/users/:id", async (req, res) => {
       try {
-        const {id} = req.params
-        const user = await usersCollection.findOne({_id: new ObjectId(id)})
+        const { id } = req.params;
+        const user = await usersCollection.findOne({ _id: new ObjectId(id) });
         if (!user) {
           return res.status(404).json({
-            message: "user not found"
-          })
+            message: "user not found",
+          });
         }
-        
-        res.status(200).json(user)
-      } catch (error) {
-         res.status(403).json({
-          message: "Failed to fetch user",
-          error,
-        });
-      }
-    })
 
-    //find users by email
-    app.get("/users/user/:email", async(req, res)=>{
-      try {
-        const user = await usersCollection.find({email:req.params.email, age: {$gt: 38}}, {projection: {name: 0}}).toArray()
-        
-        res.json(user)
-        
-        
+        res.status(200).json(user);
       } catch (error) {
         res.status(403).json({
           message: "Failed to fetch user",
           error,
-        })
+        });
+      }
+    });
+
+    //find users by email
+    app.get("/users/user/:email", async (req, res) => {
+      try {
+        const user = await usersCollection
+          .find(
+            { email: req.params.email, age: { $gt: 38 } },
+            { projection: { name: 0 } }
+          )
+          .toArray();
+
+        res.json(user);
+      } catch (error) {
+        res.status(403).json({
+          message: "Failed to fetch user",
+          error,
+        });
+      }
+    });
+
+    //update information to db
+    app.patch("/update-user/:id", async (req, res) => {
+      const { id } = req.params;
+
+      const userData = req.body;
+      try {
+        const filter = { _id: new ObjectId(id) };
+
+        const updateInfo = {
+          $set: {
+            ...userData
+          },
+        };
+
+        const options = { upsert: true };
+
+        const result = await usersCollection.updateOne(filter,updateInfo,options);
+
+        res.json(result)
+      } catch (error) {
+        res.status(403).json({
+          message: "Failed to update user",
+          error,
+        });
+      }
+    });
+
+    app.patch("/users/increase-age", async (req,res)=>{
+      try {
+        const result = await usersCollection.updateMany(
+         {}, { $set: { status: "pending" } }
+        );
+        res.json(result)
+      } catch (error) {
+        res.status(403).json({
+          message: "Failed to update users age",
+          error,
+        });    
       }
     })
 
