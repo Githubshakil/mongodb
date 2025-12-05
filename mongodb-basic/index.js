@@ -81,6 +81,22 @@ async function run() {
       }
     })
 
+    //find users by email
+    app.get("/users/user/:email", async(req, res)=>{
+      try {
+        const user = await usersCollection.find({email:req.params.email, age: {$gt: 38}}, {projection: {name: 0}}).toArray()
+        
+        res.json(user)
+        
+        
+      } catch (error) {
+        res.status(403).json({
+          message: "Failed to fetch user",
+          error,
+        })
+      }
+    })
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
